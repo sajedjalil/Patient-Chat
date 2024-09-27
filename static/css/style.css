@@ -5,45 +5,63 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f0f0f0;
 }
+
 .chat-container {
-    width: 80%;
+    width: 100%;
     max-width: 600px;
+    height: 100vh;
+    max-height: 800px;
+    display: flex;
+    flex-direction: column;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     overflow: hidden;
 }
+
 .chat-messages {
-    height: 400px;
+    flex-grow: 1;
     overflow-y: auto;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
+
 .message {
+    max-width: 80%;
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 5px;
+    word-wrap: break-word;
 }
+
 .user-message {
     background-color: #e6f2ff;
-    text-align: right;
+    align-self: flex-end;
 }
+
 .ai-message {
     background-color: #f0f0f0;
+    align-self: flex-start;
 }
+
 .input-area {
     display: flex;
     padding: 20px;
     border-top: 1px solid #e0e0e0;
 }
+
 #user-input {
     flex-grow: 1;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 16px;
 }
+
 #send-button {
     padding: 10px 20px;
     background-color: #007bff;
@@ -52,4 +70,69 @@ body {
     border-radius: 4px;
     margin-left: 10px;
     cursor: pointer;
+    font-size: 16px;
+}
+
+/* Markdown Styles */
+.ai-message p {
+    margin: 0 0 10px 0;
+}
+
+.ai-message h1, .ai-message h2, .ai-message h3, .ai-message h4, .ai-message h5, .ai-message h6 {
+    margin: 15px 0 10px 0;
+}
+
+.ai-message ul, .ai-message ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.ai-message code {
+    background-color: #f8f8f8;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.ai-message pre {
+    background-color: #f8f8f8;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.ai-message blockquote {
+    border-left: 4px solid #ccc;
+    margin: 10px 0;
+    padding-left: 10px;
+    color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        align-items: flex-start;
+    }
+
+    .chat-container {
+        width: 100%;
+        height: 100vh;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    .input-area {
+        flex-direction: column;
+    }
+
+    #send-button {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
 }

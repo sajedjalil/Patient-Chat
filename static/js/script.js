@@ -8,8 +8,24 @@ function addMessage(message, isUser) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
     messageElement.classList.add(isUser ? 'user-message' : 'ai-message');
-    messageElement.textContent = message;
+
+    if (isUser) {
+        messageElement.innerHTML = marked.parse(message);
+    } else {
+        messageElement.innerHTML = '<div class="typing-indicator">AI is typing...</div>';
+    }
+
     chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return messageElement;
+}
+
+function updateAIMessage(messageElement, content) {
+    const typingIndicator = messageElement.querySelector('.typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+    messageElement.innerHTML = marked.parse(content);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
@@ -19,19 +35,22 @@ async function sendMessage() {
         addMessage(message, true);
         userInput.value = '';
 
-        // Prepare the data to send to the API
+        // Add user message to chat history
+        chatHistory.push({ role: 'user', content: message });
+
         const data = {
-            userType: 'patient', // You can change this as needed
+            userType: 'patient',
             message: message,
             history: chatHistory
         };
+
+        const aiMessageElement = addMessage('', false);
 
         try {
             const response = await fetch('/chat/', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken') // Function to get CSRF token
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -40,18 +59,16 @@ async function sendMessage() {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const result = await response.json();
+            const responseData = await response.json();
+            const aiMessage = responseData.response;
+            updateAIMessage(aiMessageElement, aiMessage);
 
-            // Add the AI's response to the chat
-            addMessage(result.response, false);
-
-            // Update chat history
-            chatHistory.push({ role: 'user', content: message });
-            chatHistory.push({ role: 'assistant', content: result.response });
+            // Add AI message to chat history
+            chatHistory.push({ role: 'assistant', content: aiMessage });
 
         } catch (error) {
             console.error('Error:', error);
-            addMessage("Sorry, there was an error processing your request.", false);
+            updateAIMessage(aiMessageElement, "Sorry, there was an error processing your request.");
         }
     }
 }
@@ -62,19 +79,3 @@ userInput.addEventListener('keypress', (e) => {
         sendMessage();
     }
 });
-
-// Function to get CSRF token from cookies
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
