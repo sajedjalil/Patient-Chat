@@ -2,6 +2,26 @@ from langchain_anthropic import ChatAnthropic
 
 
 class LLM:
+    """
+    A class to represent a Language Model (LLM) using the LangChain library with Anthropic model.
+
+    Attributes:
+    -----------
+    model_name : str
+        The name of the LLM model to be used. Default is "claude-3-haiku-20240307".
+    llm : ChatAnthropic
+        An instance of the ChatAnthropic model.
+    tools : list
+        A list of functions representing tools that can be used with the LLM.
+    llm_with_tools : ChatAnthropic
+        An instance of the ChatAnthropic model with the tools bound.
+
+    Methods:
+    --------
+    __init__(self, model_name: str = "claude-3-haiku-20240307")
+        Initializes the LLM class with the specified model name and binds the tools.
+    """
+
     def __init__(self, model_name: str = "claude-3-haiku-20240307"):
         self.model_name = model_name
         llm = ChatAnthropic(model=model_name)
