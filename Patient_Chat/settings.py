@@ -6,10 +6,12 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
+# Load environment variables and API keys.
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+LANGCHAIN_API_KEY = os.environ.get('LANGCHAIN_API_KEY')
+LANGCHAIN_ENDPOINT = os.environ.get('LANGCHAIN_ENDPOINT')
+LANGCHAIN_TRACING_V2 = os.environ.get('LANGCHAIN_TRACING_V2')
+LANGCHAIN_PROJECT = os.environ.get('LANGCHAIN_PROJECT')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-=gu=528j*lqd0obl*(e+t#!vz9aujru4#20%43&z8yx&57^5x-'
