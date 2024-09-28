@@ -32,10 +32,25 @@ body {
 
 .message {
     max-width: 80%;
-    margin-bottom: 10px;
+    margin-bottom: 24px;  /* Increased to add more vertical space between messages */
     padding: 10px;
     border-radius: 5px;
     word-wrap: break-word;
+    position: relative;
+    min-width: 120px;  /* Add minimum width to accommodate timestamp */
+}
+
+.message-content {
+    margin-bottom: 15px;  /* Add space between content and timestamp */
+}
+
+.timestamp {
+    font-size: 0.8em;
+    color: #888;
+    position: absolute;
+    bottom: -20px;  /* Adjusted to prevent overlap with next message */
+    right: 0;
+    white-space: nowrap;  /* Prevent timestamp from wrapping */
 }
 
 .user-message {

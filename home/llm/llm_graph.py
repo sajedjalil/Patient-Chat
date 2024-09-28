@@ -1,43 +1,45 @@
+from langchain_anthropic import ChatAnthropic
 from langgraph.graph import START, StateGraph, MessagesState
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import tools_condition, ToolNode
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage
 
 import logging
-from home.llm.llm import LLM
+
+from home.db_schema.chat_history import ChatHistory
+from home.llm import prompt
+from home.llm.tools import Tools
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
 
-class LLMGraph:
-    prompt_text = '''You are a helpful AI medical assistant namely Patient Chat and are developed by a software 
-    engineer named Sajed. 
-    You should only respond to health-related topics such as: 
-    - General human health and lifestyle inquiries.
-    - Questions about men, women and children health
-    - Questions about the patient's medical condition, medication regimen, diet, etc. 
-    - Various requests from the patient to their doctor such as make appointments, modify appointments and medication changes. 
-    You should filter out and ignore any unrelated, overly sensitive, or controversial topics.'''
+class State(MessagesState):
+    summary: str
 
+
+class LLMGraph:
     def __init__(self):
-        self.llm = LLM()
+        self.model = ChatAnthropic(model="claude-3-haiku-20240307")
+        self.tool_list = [Tools.request_medication_change, Tools.make_appointment, Tools.request_appointment_change]
         self.graph = self.build_graph()
 
-    def assistant(self, state: MessagesState):
-        # Prompt message
-        sys_msg = SystemMessage(content=self.prompt_text)
-        return {"messages": [self.llm.llm_with_tools.invoke([sys_msg] + state["messages"])]}
-
     def build_graph(self) -> CompiledStateGraph:
-        builder = StateGraph(MessagesState)
+        builder = StateGraph(State)
         builder.add_node("assistant", self.assistant)
-        builder.add_node("tools", ToolNode(self.llm.tools))
+        builder.add_node("tools", ToolNode(self.tool_list))
 
         builder.add_edge(START, "assistant")
         builder.add_conditional_edges("assistant", tools_condition)
         builder.add_edge("tools", "assistant")
 
         return builder.compile()
+
+    def assistant(self, state: State):
+        # Prompt message
+        sys_msg = SystemMessage(content=prompt.prompt_text)
+        model_with_tools = self.model.bind_tools(self.tool_list)
+        return {"messages": [model_with_tools.invoke([sys_msg] + state["messages"])]}
 
     def inference(self, user_message, history) -> str:
         messages = []
@@ -52,4 +54,24 @@ class LLMGraph:
         result = self.graph.invoke({"messages": messages})
         logger.debug(result)
 
-        return result['messages'][-1].content
+        assistant_response = result['messages'][-1].content
+
+        # Create user message entry
+        ChatHistory.objects.create(
+            patient_id=1,
+            chat_id=1,
+            is_user=True,
+            text=user_message,
+            timestamp=timezone.now()
+        )
+
+        # Create assistant message entry
+        ChatHistory.objects.create(
+            patient_id=1,
+            chat_id=1,
+            is_user=False,
+            text=assistant_response,
+            timestamp=timezone.now()
+        )
+
+        return assistant_response
