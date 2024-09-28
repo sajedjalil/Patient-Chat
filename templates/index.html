@@ -10,13 +10,21 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-messages" id="chat-messages">
-            <!-- Messages will be added here dynamically -->
+    <div class="app-container">
+        <div class="user-info" id="user-info">
+            <!-- User information will be loaded here -->
         </div>
-        <div class="input-area">
-            <label for="user-input"></label><input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-button">Send</button>
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages will be added here dynamically -->
+            </div>
+            <div class="input-area">
+                <label for="user-input"></label><input type="text" id="user-input" placeholder="Type your message...">
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+        <div class="right-sidebar">
+            <!-- Reserved for future use -->
         </div>
     </div>
 

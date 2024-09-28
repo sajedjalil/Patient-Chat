@@ -1,53 +1,83 @@
+from django.core.serializers.json import DjangoJSONEncoder
 from django.shortcuts import render
 from django.utils import timezone
-
-from home.db_schema.chat_history import ChatHistory
-from home.llm.llm_graph import LLMGraph
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 import json
+
+from home.db_schema.chat_history import ChatHistory
+from home.db_schema.patient import Patient
+from home.llm.llm_graph import LLMGraph
 
 
 def index(request):
     return render(request, 'index.html')
 
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def inference(request):
+    data = json.loads(request.body)
+    message = data['message']
+    history = data.get('history', [])
+    user_timestamp = data.get('timestamp')
+
+    llm_graph = LLMGraph()
+    response = llm_graph.inference(message, history)
+
+    user_entry, ai_entry = save_chat_entries_db(message, response, user_timestamp)
+
+    return JsonResponse({
+        'response': response,
+        'user_timestamp': user_entry.timestamp.timestamp() * 1000,
+        'ai_timestamp': ai_entry.timestamp.timestamp() * 1000
+    })
+
+
+def save_chat_entries_db(user_message, ai_response, user_timestamp):
+    user_entry = ChatHistory.objects.create(
+        patient_id=1,
+        chat_id=1,
+        is_user=True,
+        text=user_message,
+        timestamp=timezone.datetime.fromtimestamp(user_timestamp / 1000.0, tz=timezone.get_current_timezone())
+    )
+
+    ai_entry = ChatHistory.objects.create(
+        patient_id=1,
+        chat_id=1,
+        is_user=False,
+        text=ai_response,
+        timestamp=timezone.now()
+    )
+
+    return user_entry, ai_entry
+
+
+class DateTimeEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, timezone.datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        return super().default(obj)
+
 
 @csrf_exempt
-def inference(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        user_type = data.get('userType')
-        message = data.get('message')
-        history = data.get('history', [])
-        user_timestamp = data.get('timestamp')  # Get timestamp from frontend
+@require_http_methods(["GET"])
+def get_user_info(request):
+    patient = Patient.objects.first()
+    if not patient:
+        return JsonResponse({'error': 'No patient found'}, status=404)
 
-        llm_graph = LLMGraph()
-        response = llm_graph.inference(message, history)
-
-        # Create user message entry
-        user_entry = ChatHistory.objects.create(
-            patient_id=1,
-            chat_id=1,
-            is_user=True,
-            text=message,
-            timestamp=timezone.datetime.fromtimestamp(user_timestamp / 1000.0, tz=timezone.get_current_timezone())
-        )
-
-        # Create AI message entry
-        ai_timestamp = timezone.now()
-        ai_entry = ChatHistory.objects.create(
-            patient_id=1,
-            chat_id=1,
-            is_user=False,
-            text=response,
-            timestamp=ai_timestamp
-        )
-
-        return JsonResponse({
-            'response': response,
-            'user_timestamp': user_entry.timestamp.timestamp() * 1000,  # Convert to milliseconds
-            'ai_timestamp': ai_timestamp.timestamp() * 1000  # Convert to milliseconds
-        })
-    else:
-        return JsonResponse({'error': 'There was an error in the request to the server.'}, status=405)
+    return JsonResponse({
+        'first_name': patient.first_name,
+        'last_name': patient.last_name,
+        'date_of_birth': patient.date_of_birth,
+        'phone_number': patient.phone_number,
+        'email': patient.email,
+        'medical_conditions': patient.medical_conditions,
+        'medication_regimen': patient.medication_regimen,
+        'last_appointment': patient.last_appointment,
+        'next_appointment': patient.next_appointment,
+        'doctor_name': patient.doctor_name,
+    }, encoder=DateTimeEncoder)

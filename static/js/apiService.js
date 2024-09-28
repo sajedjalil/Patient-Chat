@@ -24,3 +24,16 @@ export async function sendMessageToAPI(message, chatHistory, userTimestamp) {
 
     return await response.json();
 }
+
+export async function fetchUserInfo() {
+    try {
+        const response = await fetch('/user-info/');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        throw error;
+    }
+}

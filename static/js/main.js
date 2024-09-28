@@ -1,9 +1,30 @@
-// main.js
-import { userInput, sendButton } from './uiElements.js';
+import { chatMessages, userInput, sendButton } from './uiElements.js';
 import { addMessage, updateAIMessage } from './messageHandler.js';
 import { sendMessageToAPI } from './apiService.js';
+import { fetchUserInfo } from './apiService.js';
 
 let chatHistory = [];
+
+async function loadUserInfo() {
+    try {
+        const userInfo = await fetchUserInfo();
+        const userInfoElement = document.getElementById('user-info');
+        userInfoElement.innerHTML = `
+            <h1>${userInfo.first_name} ${userInfo.last_name}</h1>
+            <p><strong>Date of Birth:</strong> ${userInfo.date_of_birth}</p>
+            <p><strong>Phone:</strong> ${userInfo.phone_number}</p>
+            <p><strong>Email:</strong> ${userInfo.email}</p>
+            <p><strong>Medical Conditions:</strong> ${userInfo.medical_conditions}</p>
+            <p><strong>Medication:</strong> ${userInfo.medication_regimen}</p>
+            <p><strong>Last Appointment:</strong> ${userInfo.last_appointment}</p>
+            <p><strong>Next Appointment:</strong> ${userInfo.next_appointment}</p>
+            <p><strong>Doctor:</strong> ${userInfo.doctor_name}</p>
+        `;
+    } catch (error) {
+        console.error('Failed to load user info:', error);
+        // Optionally, display an error message to the user
+    }
+}
 
 async function sendMessage() {
     const message = userInput.value.trim();
@@ -37,3 +58,6 @@ userInput.addEventListener('keypress', (e) => {
         sendMessage();
     }
 });
+
+// Load user info when the page loads
+loadUserInfo();
