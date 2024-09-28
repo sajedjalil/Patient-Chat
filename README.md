@@ -8,4 +8,4 @@ An chat application that uses Langchain, Langgraph and knowledge graph.
 - To run the files use ```chmod +x create_db_tables.sh insert_data.sh```
 - Then run ```./create_db_tables.sh```
 - Lastly, run ```./insert_data.sh```
-
+- Configure the database connection parameters in settings.py
