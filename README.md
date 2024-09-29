@@ -9,3 +9,8 @@ An chat application that uses Langchain, Langgraph and knowledge graph.
 - Then run ```./create_db_tables.sh```
 - Lastly, run ```./insert_data.sh```
 - Configure the database connection parameters in settings.py
+
+## Testing
+- Run tests by ```python manage.py test```
+
+

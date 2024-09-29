@@ -38,7 +38,7 @@ psql -d $DB_NAME -c "
 CREATE TABLE IF NOT EXISTS chat_history (
     id SERIAL PRIMARY KEY,
     patient_id INTEGER NOT NULL,
-    chat_id INTEGER NOT NULL,
+    thread_id VARCHAR(50) NOT NULL,
     is_user BOOLEAN NOT NULL,
     text TEXT NOT NULL,
     summary TEXT,

@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+import uuid
 
 from home.db_schema.chat_history import ChatHistory
 from home.db_schema.patient import Patient
@@ -22,11 +23,12 @@ def inference(request):
     message = data['message']
     history = data.get('history', [])
     user_timestamp = data.get('timestamp')
+    thread_id = data.get('threadId')
 
     llm_graph = LLMGraph()
     response = llm_graph.inference(message, history)
 
-    user_entry, ai_entry = save_chat_entries_db(message, response, user_timestamp)
+    user_entry, ai_entry = save_chat_entries_db(message, response, user_timestamp, thread_id)
 
     return JsonResponse({
         'response': response,
@@ -35,10 +37,10 @@ def inference(request):
     })
 
 
-def save_chat_entries_db(user_message, ai_response, user_timestamp):
+def save_chat_entries_db(user_message, ai_response, user_timestamp, thread_id):
     user_entry = ChatHistory.objects.create(
         patient_id=1,
-        chat_id=1,
+        thread_id=thread_id,
         is_user=True,
         text=user_message,
         timestamp=timezone.datetime.fromtimestamp(user_timestamp / 1000.0, tz=timezone.get_current_timezone())
@@ -46,7 +48,7 @@ def save_chat_entries_db(user_message, ai_response, user_timestamp):
 
     ai_entry = ChatHistory.objects.create(
         patient_id=1,
-        chat_id=1,
+        thread_id=thread_id,
         is_user=False,
         text=ai_response,
         timestamp=timezone.now()
@@ -58,7 +60,7 @@ def save_chat_entries_db(user_message, ai_response, user_timestamp):
 class DateTimeEncoder(DjangoJSONEncoder):
     def default(self, obj):
         if isinstance(obj, timezone.datetime):
-            return obj.strftime('%Y-%m-%d %H:%M:%S')
+            return obj.strftime('%m-%d-%Y %H:%M:%S')
         return super().default(obj)
 
 
@@ -81,3 +83,12 @@ def get_user_info(request):
         'next_appointment': patient.next_appointment,
         'doctor_name': patient.doctor_name,
     }, encoder=DateTimeEncoder)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_unique_thread_id(request):
+    return JsonResponse({
+        'thread_id': uuid.uuid4()
+    })
+

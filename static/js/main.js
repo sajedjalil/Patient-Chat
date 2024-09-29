@@ -1,9 +1,9 @@
 import { chatMessages, userInput, sendButton } from './uiElements.js';
 import { addMessage, updateAIMessage } from './messageHandler.js';
-import { sendMessageToAPI } from './apiService.js';
-import { fetchUserInfo } from './apiService.js';
+import { sendMessageToAPI, fetchUserInfo, fetchThreadId } from './apiService.js';
 
 let chatHistory = [];
+let threadId = null;
 
 async function loadUserInfo() {
     try {
@@ -26,6 +26,16 @@ async function loadUserInfo() {
     }
 }
 
+async function saveThreadId() {
+    try {
+        const response = await fetchThreadId();
+        threadId = response['thread_id']
+    } catch (error) {
+        console.error('Failed to get thread id:', error);
+        // Optionally, display an error message to the user
+    }
+}
+
 async function sendMessage() {
     const message = userInput.value.trim();
     if (message) {
@@ -38,7 +48,7 @@ async function sendMessage() {
         const aiMessageElement = addMessage('', false, null);
 
         try {
-            const responseData = await sendMessageToAPI(message, chatHistory, userTimestamp);
+            const responseData = await sendMessageToAPI(message, chatHistory, userTimestamp, threadId);
             const aiMessage = responseData.response;
             const aiTimestamp = responseData.ai_timestamp;
             updateAIMessage(aiMessageElement, aiMessage, aiTimestamp);
@@ -61,3 +71,4 @@ userInput.addEventListener('keypress', (e) => {
 
 // Load user info when the page loads
 loadUserInfo();
+saveThreadId();
