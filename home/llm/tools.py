@@ -9,7 +9,6 @@ class Tools:
         """
         return "Change request submitted for " + previous_medication
 
-
     def make_appointment(date: str, reason: str) -> str:
         """Puts an appointment request on the specified date and reason.
 
@@ -20,7 +19,6 @@ class Tools:
             reason: second str
         """
         return "Appointment requested on " + date + " for " + reason
-
 
     def request_appointment_change(past_date: str, requested_date: str) -> str:
         """Puts an appointment change request for a given date and requested.

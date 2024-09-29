@@ -1,4 +1,5 @@
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Q
 from django.shortcuts import render
 from django.utils import timezone
 from django.http import JsonResponse
@@ -7,8 +8,9 @@ from django.views.decorators.http import require_http_methods
 import json
 import uuid
 
-from home.db_schema.chat_history import ChatHistory
-from home.db_schema.patient import Patient
+from home.db.chat_history import ChatHistory
+from home.db.patient import Patient
+from home.llm.constants import summarize_trigger_count
 from home.llm.llm_graph import LLMGraph
 
 
@@ -26,9 +28,24 @@ def inference(request):
     thread_id = data.get('threadId')
 
     llm_graph = LLMGraph()
-    response = llm_graph.inference(message, history)
 
-    user_entry, ai_entry = save_chat_entries_db(message, response, user_timestamp, thread_id)
+    if len(history) >= summarize_trigger_count:
+        summary = get_latest_summary(patient_id=1, is_user=False, thread_id=thread_id)
+
+        history = [
+            {
+                "role": "user",
+                "content": "Provide me with the conversation summary"
+            },
+            {
+                "role": "assistant",
+                "content": summary
+            }
+        ]
+
+    response, summary = llm_graph.inference(message, history, thread_id)
+
+    user_entry, ai_entry = save_chat_entries_db(message, response, summary, user_timestamp, thread_id)
 
     return JsonResponse({
         'response': response,
@@ -37,7 +54,7 @@ def inference(request):
     })
 
 
-def save_chat_entries_db(user_message, ai_response, user_timestamp, thread_id):
+def save_chat_entries_db(user_message, ai_response, summary, user_timestamp, thread_id):
     user_entry = ChatHistory.objects.create(
         patient_id=1,
         thread_id=thread_id,
@@ -51,10 +68,21 @@ def save_chat_entries_db(user_message, ai_response, user_timestamp, thread_id):
         thread_id=thread_id,
         is_user=False,
         text=ai_response,
+        summary=summary,
         timestamp=timezone.now()
     )
 
     return user_entry, ai_entry
+
+
+def get_latest_summary(patient_id, is_user, thread_id):
+    latest_chat = ChatHistory.objects.filter(
+        Q(patient_id=patient_id) &
+        Q(is_user=is_user) &
+        Q(thread_id=thread_id)
+    ).order_by('-timestamp').first()
+
+    return latest_chat.summary if latest_chat else None
 
 
 class DateTimeEncoder(DjangoJSONEncoder):
@@ -91,4 +119,3 @@ def get_unique_thread_id(request):
     return JsonResponse({
         'thread_id': uuid.uuid4()
     })
-

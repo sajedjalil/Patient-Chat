@@ -2,10 +2,13 @@
 import { getCookie } from './utils.js';
 
 export async function sendMessageToAPI(message, chatHistory, userTimestamp, threadId) {
+    // Use array destructuring with the rest element at the end
+    const [lastElement, ...historyWithoutLast] = [...chatHistory].reverse();
+
     const data = {
         userType: 'patient',
         message: message,
-        history: chatHistory,
+        history: historyWithoutLast.reverse(),  // Reverse back to original order
         timestamp: userTimestamp,
         threadId: threadId
     };

@@ -1,13 +1,13 @@
 from langchain_anthropic import ChatAnthropic
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, MessagesState, END
 from langgraph.prebuilt import tools_condition, ToolNode
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage
 from typing import Literal, List
-from django.utils import timezone
 import logging
 
-from home.db_schema.chat_history import ChatHistory
-from home.llm import prompt
+from home.llm import constants
+from home.llm.constants import summary_prompt, summarize_trigger_count
 from home.llm.tools import Tools
 
 logger = logging.getLogger(__name__)
@@ -25,10 +25,11 @@ class LLMGraph:
             Tools.make_appointment,
             Tools.request_appointment_change
         ]
-        self.graph = self.build_graph().compile()
+        memory = MemorySaver()
+        self.graph = self.build_graph().compile(checkpointer=memory)
 
-    def assistant(self, state: State):
-        sys_msg = SystemMessage(content=prompt.prompt_text)
+    def ai_agent(self, state: State):
+        sys_msg = SystemMessage(content=constants.prompt_text)
         model_with_tools = self.model.bind_tools(self.tool_list)
         return {"messages": [model_with_tools.invoke([sys_msg] + state["messages"])]}
 
@@ -41,33 +42,31 @@ class LLMGraph:
 
     def build_graph(self) -> StateGraph:
         builder = StateGraph(State)
-        builder.add_node("assistant", self.assistant)
+        builder.add_node("ai_agent", self.ai_agent)
         builder.add_node("tools", ToolNode(self.tool_list))
         builder.add_node("summarization_subgraph", self.build_summarize_subgraph().compile())
 
-        builder.add_edge(START, "summarization_subgraph")
-        builder.add_edge("summarization_subgraph", "assistant")
-        builder.add_conditional_edges("assistant", tools_condition)
-        builder.add_edge("tools", "assistant")
+        builder.add_edge(START, "ai_agent")
+        builder.add_edge("ai_agent", "summarization_subgraph")
+        builder.add_conditional_edges("ai_agent", tools_condition)
+        builder.add_edge("tools", "ai_agent")
+        builder.add_edge("summarization_subgraph", END)
 
         return builder
 
-    def inference(self, user_message: str, history: List[dict]) -> str:
+    def inference(self, user_message: str, history: List[dict], thread_id: str):
+        config = {"configurable": {"thread_id": thread_id}}
         messages = self.convert_history_to_messages(history)
         messages.append(HumanMessage(content=user_message))
 
-        result = self.graph.invoke({"messages": messages})
-        logger.debug(result)
-
+        result = self.graph.invoke({"messages": messages}, config)
         assistant_response = result['messages'][-1].content
 
-        return assistant_response
+        summary = self.graph.get_state(config).values.get("summary", "")
+        return assistant_response, summary
 
     def summarize_conversation(self, state: State):
-        summary = state.get("summary", "")
-        summary_message = self.get_summary_message(summary)
-
-        messages = state["messages"] + [HumanMessage(content=summary_message)]
+        messages = state["messages"] + [HumanMessage(content=summary_prompt)]
         response = self.model.invoke(messages)
 
         delete_messages = [RemoveMessage(id=m.id) for m in state["messages"][:-2]]
@@ -75,7 +74,7 @@ class LLMGraph:
 
     @staticmethod
     def if_need_summarization(state: State) -> Literal["summarize_conversation", "__end__"]:
-        if len(state["messages"]) >= 6:
+        if len(state["messages"]) >= summarize_trigger_count:
             return "summarize_conversation"
         else:
             return "__end__"
@@ -87,11 +86,3 @@ class LLMGraph:
             else AIMessage(content=msg['content'])
             for msg in history
         ]
-
-    @staticmethod
-    def get_summary_message(summary: str) -> str:
-        if summary:
-            return f"This is summary of the conversation to date: {summary}\n\n" \
-                   "Extend the summary by taking into account the new messages above:"
-        return "Create a summary of the conversation above:"
-

@@ -42,7 +42,7 @@ async function sendMessage() {
         const userTimestamp = Date.now();
         addMessage(message, true, userTimestamp);
         userInput.value = '';
-
+        
         chatHistory.push({ role: 'user', content: message });
 
         const aiMessageElement = addMessage('', false, null);
