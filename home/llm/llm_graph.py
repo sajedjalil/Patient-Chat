@@ -8,7 +8,7 @@ import logging
 
 from home.llm import constants
 from home.llm.constants import summary_prompt, summarize_trigger_count
-from home.llm.tools import Tools
+from home.llm.function_tools.tools import Tools
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,13 @@ class LLMGraph:
             Tools.make_appointment,
             Tools.request_appointment_change
         ]
+        self.model = self.model.bind_tools(self.tool_list)
         memory = MemorySaver()
         self.graph = self.build_graph().compile(checkpointer=memory)
 
     def ai_agent(self, state: State):
         sys_msg = SystemMessage(content=constants.prompt_text)
-        model_with_tools = self.model.bind_tools(self.tool_list)
-        return {"messages": [model_with_tools.invoke([sys_msg] + state["messages"])]}
+        return {"messages": [self.model.invoke([sys_msg] + state["messages"])]}
 
     def build_summarize_subgraph(self) -> StateGraph:
         builder = StateGraph(State)
@@ -40,19 +40,28 @@ class LLMGraph:
         builder.add_edge("summarize_conversation", END)
         return builder
 
-    def build_graph(self) -> StateGraph:
+    def build_tool_call_subgraph(self) -> StateGraph:
         builder = StateGraph(State)
         builder.add_node("ai_agent", self.ai_agent)
         builder.add_node("tools", ToolNode(self.tool_list))
-        builder.add_node("summarization_subgraph", self.build_summarize_subgraph().compile())
 
         builder.add_edge(START, "ai_agent")
-        builder.add_edge("ai_agent", "summarization_subgraph")
         builder.add_conditional_edges("ai_agent", tools_condition)
         builder.add_edge("tools", "ai_agent")
+
+        return builder
+
+    def build_graph(self) -> StateGraph:
+        builder = StateGraph(State)
+        builder.add_node("summarization_subgraph", self.build_summarize_subgraph().compile())
+        builder.add_node("tool_call_subgraph", self.build_tool_call_subgraph().compile())
+
+        builder.add_edge(START, "tool_call_subgraph")
+        builder.add_edge("tool_call_subgraph", "summarization_subgraph" )
         builder.add_edge("summarization_subgraph", END)
 
         return builder
+
 
     def inference(self, user_message: str, history: List[dict], thread_id: str):
         config = {"configurable": {"thread_id": thread_id}}

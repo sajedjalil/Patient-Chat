@@ -1,6 +1,6 @@
 class Tools:
     def request_medication_change(previous_medication: str) -> str:
-        """Puts a request to the doctor for medication change.
+        """Puts a request to the doctor for medication change when the previous medication name is mentioned
 
         Returns a string with the name of current medication and Change request submitted.
 

@@ -1,6 +1,8 @@
 # Patient-Chat
-An chat application that uses Langchain, Langgraph and knowledge graph.
+A chat application that uses Langchain, Langgraph and knowledge graph.
 
+## Long chat optimizations
+Front end sends all the history to the backend. But we filter and summarize in the backend and store the summary in the database for future use, using a random ```thread_id``` in Langsmith. This ```thread_id``` is unique across all database users.
 
 ## database
 - Install postgresql from https://www.postgresql.org/download/

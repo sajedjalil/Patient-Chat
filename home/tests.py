@@ -1,5 +1,8 @@
+import uuid
+
 from django.test import TestCase
 
+from home.llm.constants import history_two_turns
 from home.llm.llm_graph import LLMGraph
 
 
@@ -9,26 +12,30 @@ class LLMTestCase(TestCase):
 
     def test_llm_name(self):
         user_message = "Hi, my name is Sajed. What's your name?"
-        ai_response = self.llm_graph.inference(user_message, [])
+        ai_response, summary = self.llm_graph.inference(user_message, [], "test_"+str(uuid.uuid4()))
 
         self.assertTrue(ai_response.__contains__("Patient Chat"))
 
     def test_llm_remembers_context_history(self):
 
-        history = [
-            {
-                "role": "user",
-                "content": "Hi, my name is Sajed. What's your name?"
-            },
-            {
-                "role": "assistant",
-                "content": "Hello Sajed, how can I assist you today? I'm an AI medical assistant and I'm happy to "
-                           "help with any health-related inquiries or requests you may have. Please let me know how I "
-                           "can be of service."
-            },
-        ]
+        history = history_two_turns
         user_message = "Now tell me what's my name?"
-        ai_response = self.llm_graph.inference(user_message, history)
+        ai_response, summary = self.llm_graph.inference(user_message, history, "test_"+str(uuid.uuid4()) )
 
-        print(ai_response)
         self.assertTrue(ai_response.__contains__("Sajed"))
+
+    def test_llm_tool_call(self):
+
+        history = []
+        user_message = "Change my medicine lorazepam."
+        ai_response, summary = self.llm_graph.inference(user_message, history, "test_"+str(uuid.uuid4()) )
+
+        self.assertGreater( len(ai_response), 50)
+
+    def test_llm_tool_call_with_summary(self):
+
+        history = history_two_turns
+        user_message = "Change my medicine lorazepam."
+        ai_response, summary = self.llm_graph.inference(user_message, history, "test_"+str(uuid.uuid4()) )
+
+        self.assertGreater( len(summary), 0)
