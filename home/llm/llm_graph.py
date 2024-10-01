@@ -8,6 +8,13 @@ from home.constants import constants
 from home.constants.chat_models import model_claude_3_haiku
 from home.constants.constants import summary_prompt, summarize_trigger_count
 from home.llm.function_tools.tools import Tools
+from home.models.patient import Patient
+
+tool_list = [
+    Tools.request_medication_change,
+    Tools.make_appointment,
+    Tools.request_appointment_change
+]
 
 
 class State(MessagesState):
@@ -17,17 +24,12 @@ class State(MessagesState):
 class LLMGraph:
     def __init__(self):
         self.model = model_claude_3_haiku
-        self.tool_list = [
-            Tools.request_medication_change,
-            Tools.make_appointment,
-            Tools.request_appointment_change
-        ]
-        self.model = self.model.bind_tools(self.tool_list)
+        self.model = self.model.bind_tools(tool_list)
         memory = MemorySaver()
         self.graph = self.build_graph().compile(checkpointer=memory)
 
     def ai_agent(self, state: State):
-        sys_msg = SystemMessage(content=constants.prompt_text)
+        sys_msg = SystemMessage(content=constants.llm_prompt_text)
         return {"messages": [self.model.invoke([sys_msg] + state["messages"])]}
 
     def build_summarize_subgraph(self) -> StateGraph:
@@ -40,7 +42,7 @@ class LLMGraph:
     def build_tool_call_subgraph(self) -> StateGraph:
         builder = StateGraph(State)
         builder.add_node("ai_agent", self.ai_agent)
-        builder.add_node("tools", ToolNode(self.tool_list))
+        builder.add_node("tools", ToolNode(tool_list))
 
         builder.add_edge(START, "ai_agent")
         builder.add_conditional_edges("ai_agent", tools_condition)
@@ -59,7 +61,7 @@ class LLMGraph:
 
         return builder
 
-    def inference(self, user_message: str, history: List[dict], thread_id: str):
+    def chat_inference(self, user_message: str, history: List[dict], thread_id: str):
         config = {"configurable": {"thread_id": thread_id}}
         messages = self.convert_history_to_messages(history)
         messages.append(HumanMessage(content=user_message))
@@ -67,7 +69,7 @@ class LLMGraph:
         result = self.graph.invoke({"messages": messages}, config)
         assistant_response = result['messages'][-1].content
 
-        summary = self.graph.get_state(config).values.get("summary", "")
+        summary = self.graph.get_state(config).values.get("summary", None)
         return assistant_response, summary
 
     def summarize_conversation(self, state: State):

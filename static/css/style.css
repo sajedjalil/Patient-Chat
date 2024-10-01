@@ -14,7 +14,7 @@ body {
 .user-info {
     width: 25%;
     background-color: #f9f9f9;
-    padding: 20px;
+    padding: 15px;
     overflow-y: auto;
 }
 
@@ -26,10 +26,6 @@ body {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-.right-sidebar {
-    width: 25%;
-    background-color: #f9f9f9;
-}
 
 .chat-messages {
     flex-grow: 1;
@@ -41,12 +37,12 @@ body {
 
 .message {
     max-width: 80%;
-    margin-bottom: 24px;  /* Increased to add more vertical space between messages */
+    margin-bottom: 24px;
     padding: 10px;
     border-radius: 5px;
     word-wrap: break-word;
     position: relative;
-    min-width: 120px;  /* Add minimum width to accommodate timestamp */
+    min-width: 120px;
 }
 
 .message-content {
@@ -164,4 +160,60 @@ body {
         margin-top: 10px;
         width: 100%;
     }
+}
+
+
+.right-sidebar {
+    width: 25%;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Prevent overall scrolling */
+    padding-left: 20px
+}
+
+/* New styles for the sections */
+.sidebar-section {
+    flex: 1; /* Equal height for all sections */
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px;
+}
+
+.sidebar-section:last-child {
+    border-bottom: none;
+}
+
+.sidebar-section h2 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    font-size: 1.2em;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto; /* Enable scrolling for content */
+}
+
+#conversation-summary-div {
+    height: 33%; /* Adjust this value as needed */
+}
+
+#medical-insights-div {
+    height: 33%; /* Adjust this value as needed */
+}
+
+/* Specific styles for each section if needed */
+#conversation-summary {
+    /* Add any specific styles for the Conversation Summary section */
+}
+
+#medical-insights {
+    /* Add any specific styles for the Medical Insights section */
+}
+
+#actions {
+    /* Add any specific styles for the Actions section */
 }

@@ -13,3 +13,6 @@ model_gemini_1_5_pro = GoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
 # OpenAI Models
 # model_gpt_3_5_turbo_0125 = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
 # model_chatgpt_4o = ChatOpenAI(model="chatgpt-4o-latest", temperature=0)
+
+
+predefined_medical_model = model_claude_3_haiku

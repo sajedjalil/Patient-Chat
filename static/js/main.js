@@ -1,4 +1,4 @@
-import { chatMessages, userInput, sendButton } from './uiElements.js';
+import { userInfoElement, userInput, sendButton, conversationSummary, medicalInsights } from './uiElements.js';
 import { addMessage, updateAIMessage } from './messageHandler.js';
 import { sendMessageToAPI, fetchUserInfo, fetchThreadId } from './apiService.js';
 
@@ -52,6 +52,8 @@ async function sendMessage() {
             const aiMessage = responseData.response;
             const aiTimestamp = responseData.ai_timestamp;
             updateAIMessage(aiMessageElement, aiMessage, aiTimestamp);
+            conversationSummary.innerText = responseData.summary;
+            medicalInsights.innerText = responseData.medical_insights;
 
             chatHistory.push({ role: 'assistant', content: aiMessage });
 

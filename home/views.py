@@ -9,6 +9,7 @@ import json
 import uuid
 
 from home.constants.constants import summarize_trigger_count
+from home.llm.rag_graph import RAGGraph
 from home.models.chat_history import ChatHistory
 from home.models.patient import Patient
 from home.llm.llm_graph import LLMGraph
@@ -43,16 +44,62 @@ def inference(request):
             }
         ]
 
-    response, summary = llm_graph.inference(message, history, thread_id)
+    response, summary = llm_graph.chat_inference(message, history, thread_id)
 
     user_entry, ai_entry = save_chat_entries_db(message, response, summary, user_timestamp, thread_id)
 
+    summary = summary if summary else "No summary available yet. Chat more to get one."
+
+    medical_insights = RAGGraph().rag_inference(summary, thread_id)
     return JsonResponse({
         'response': response,
         'user_timestamp': user_entry.timestamp.timestamp() * 1000,
-        'ai_timestamp': ai_entry.timestamp.timestamp() * 1000
+        'ai_timestamp': ai_entry.timestamp.timestamp() * 1000,
+        'summary': summary,
+        'medical_insights': medical_insights
     })
 
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def inference(request):
+    data = json.loads(request.body)
+    message = data['message']
+    history = data.get('history', [])
+    user_timestamp = data.get('timestamp')
+    thread_id = data.get('threadId')
+
+    llm_graph = LLMGraph()
+
+    if len(history) >= summarize_trigger_count:
+        summary = get_latest_summary(patient_id=1, is_user=False, thread_id=thread_id)
+
+        history = [
+            {
+                "role": "user",
+                "content": "Provide me with the conversation summary"
+            },
+            {
+                "role": "assistant",
+                "content": summary
+            }
+        ]
+
+    response, summary = llm_graph.chat_inference(message, history, thread_id)
+
+    user_entry, ai_entry = save_chat_entries_db(message, response, summary, user_timestamp, thread_id)
+
+    summary = summary if summary else "No summary available yet. Chat more to get one."
+
+    medical_insights = RAGGraph().rag_inference(summary, thread_id)
+    return JsonResponse({
+        'response': response,
+        'user_timestamp': user_entry.timestamp.timestamp() * 1000,
+        'ai_timestamp': ai_entry.timestamp.timestamp() * 1000,
+        'summary': summary,
+        'medical_insights': medical_insights
+    })
 
 def save_chat_entries_db(user_message, ai_response, summary, user_timestamp, thread_id):
     user_entry = ChatHistory.objects.create(
@@ -118,4 +165,12 @@ def get_user_info(request):
 def get_unique_thread_id(request):
     return JsonResponse({
         'thread_id': uuid.uuid4()
+    })
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_rag(request):
+    return JsonResponse({
+        "data": RAGGraph().rag_inference("", uuid.uuid4())
     })
