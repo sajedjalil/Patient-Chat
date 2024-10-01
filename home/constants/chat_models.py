@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI
 # Anthropic Models
 model_claude_3_haiku = ChatAnthropic(model="claude-3-haiku-20240307", temperature=0)
 model_claude_3_5_sonnet = ChatAnthropic(model="claude-3-5-sonnet-20240620", temperature=0)
-# Google Gemini Models - Found it low performing with both Langchain and function calling
+# Google Gemini Models - Warning: Found it low performing with both Langchain and function calling
 model_gemini_1_5_flash = GoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
 model_gemini_1_5_pro = GoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
 # OpenAI Models

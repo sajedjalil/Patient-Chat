@@ -12,6 +12,10 @@ Front end sends all the history to the backend. But we filter and summarize in t
 - Lastly, run ```./insert_data.sh```
 - Configure the database connection parameters in settings.py
 
+## Knowledge Graph
+- Install Neo4j https://neo4j.com/download/ or use the server version
+- Specify the environment variables for connection in the .env file
+
 ## Testing
 - Run tests by ```python manage.py test```
 
