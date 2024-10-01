@@ -1,16 +1,13 @@
-from langchain_anthropic import ChatAnthropic
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, MessagesState, END
 from langgraph.prebuilt import tools_condition, ToolNode
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage
 from typing import Literal, List
-import logging
 
-from home.llm import constants
-from home.llm.constants import summary_prompt, summarize_trigger_count
+from home.constants import constants
+from home.constants.chat_models import model_claude_3_haiku
+from home.constants.constants import summary_prompt, summarize_trigger_count
 from home.llm.function_tools.tools import Tools
-
-logger = logging.getLogger(__name__)
 
 
 class State(MessagesState):
@@ -19,7 +16,7 @@ class State(MessagesState):
 
 class LLMGraph:
     def __init__(self):
-        self.model = ChatAnthropic(model="claude-3-haiku-20240307")
+        self.model = model_claude_3_haiku
         self.tool_list = [
             Tools.request_medication_change,
             Tools.make_appointment,
@@ -57,11 +54,10 @@ class LLMGraph:
         builder.add_node("tool_call_subgraph", self.build_tool_call_subgraph().compile())
 
         builder.add_edge(START, "tool_call_subgraph")
-        builder.add_edge("tool_call_subgraph", "summarization_subgraph" )
+        builder.add_edge("tool_call_subgraph", "summarization_subgraph")
         builder.add_edge("summarization_subgraph", END)
 
         return builder
-
 
     def inference(self, user_message: str, history: List[dict], thread_id: str):
         config = {"configurable": {"thread_id": thread_id}}

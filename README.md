@@ -16,3 +16,10 @@ Front end sends all the history to the backend. But we filter and summarize in t
 - Run tests by ```python manage.py test```
 
 
+## Changing models
+- requirements.txt
+- settings.py
+- constants.py
+- .env
+
+

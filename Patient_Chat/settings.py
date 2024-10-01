@@ -8,10 +8,16 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Load environment variables and API keys.
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
+
 LANGCHAIN_API_KEY = os.environ.get('LANGCHAIN_API_KEY')
 LANGCHAIN_ENDPOINT = os.environ.get('LANGCHAIN_ENDPOINT')
 LANGCHAIN_TRACING_V2 = os.environ.get('LANGCHAIN_TRACING_V2')
 LANGCHAIN_PROJECT = os.environ.get('LANGCHAIN_PROJECT')
+
+NEO4J_URI = os.environ.get('NEO4J_URI')
+NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME')
+NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-=gu=528j*lqd0obl*(e+t#!vz9aujru4#20%43&z8yx&57^5x-'

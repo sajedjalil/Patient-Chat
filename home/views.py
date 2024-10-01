@@ -8,9 +8,9 @@ from django.views.decorators.http import require_http_methods
 import json
 import uuid
 
-from home.db.chat_history import ChatHistory
-from home.db.patient import Patient
-from home.llm.constants import summarize_trigger_count
+from home.constants.constants import summarize_trigger_count
+from home.models.chat_history import ChatHistory
+from home.models.patient import Patient
 from home.llm.llm_graph import LLMGraph
 
 
