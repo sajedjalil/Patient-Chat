@@ -18,24 +18,17 @@ INSERT INTO patient (
     next_appointment,
     doctor_name
 ) VALUES (
-    'John',
-    'Doe',
-    '1980-01-15',
+    'Nikola',
+    'Tesla',
+    '07-10-1856',
     '(555) 123-4567',
-    'john.doe@email.com',
+    'nicktesla@email.com',
     'Hypertension, Type 2 Diabetes',
     'Metformin 500mg twice daily, Lisinopril 10mg once daily',
     '2023-09-15 10:30:00',
     '2024-03-15 14:00:00',
     'Dr. Jane Smith'
 ) RETURNING id;
-
--- Insert sample chat history entries
-INSERT INTO chat_history (patient_id, chat_id, is_user, text, summary)
-VALUES
-    (currval('patient_id_seq'), 1, FALSE, 'Hello, I''ve been experiencing increased thirst lately. Is this related to my diabetes?', 'Patient reports increased thirst'),
-    (currval('patient_id_seq'), 1, TRUE, 'Hi John, increased thirst can indeed be a symptom of diabetes. Let''s schedule a check-up to monitor your blood sugar levels. How does next week look for you?', 'System suggests check-up for diabetes symptoms'),
-    (currval('patient_id_seq'), 2, FALSE, 'Next week works for me. Should I prepare anything specific for the appointment?', 'Patient agrees to check-up, asks for preparation instructions');
 "
 
 # Execute the SQL commands
@@ -49,10 +42,10 @@ if [ $? -eq 0 ]; then
 
     # Display the inserted data
     echo "Displaying inserted patient data:"
-    psql -d $DB_NAME -c "SELECT * FROM patient;"
+    psql -d $DB_NAME -c "SELECT * FROM patient;" -P pager=off
 
     echo "Displaying inserted chat history data:"
-    psql -d $DB_NAME -c "SELECT * FROM chat_history;"
+    psql -d $DB_NAME -c "SELECT * FROM chat_history;" -P pager=off
 else
     echo "Failed to insert sample data."
 fi

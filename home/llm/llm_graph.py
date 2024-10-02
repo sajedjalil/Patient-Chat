@@ -1,17 +1,22 @@
-from langchain_anthropic import ChatAnthropic
-from langgraph.graph import START, StateGraph, MessagesState
-from langgraph.graph.state import CompiledStateGraph
+from langchain_community.graphs import Neo4jGraph
+from langchain_core.documents import Document
+from langchain_experimental.graph_transformers import LLMGraphTransformer
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, StateGraph, MessagesState, END
 from langgraph.prebuilt import tools_condition, ToolNode
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage, ToolMessage
+from typing import Literal, List
 
-import logging
+from home.constants import constants
+from home.constants.chat_models import model_claude_3_haiku, model_claude_3_5_sonnet
+from home.constants.constants import summary_prompt, summarize_trigger_count
+from home.llm.function_tools.tools import Tools
+from home.models.patient import Patient
 
-from home.db_schema.chat_history import ChatHistory
-from home.llm import prompt
-from home.llm.tools import Tools
-from django.utils import timezone
-
-logger = logging.getLogger(__name__)
+tool_list = [
+    Tools.request_medication_change,
+    Tools.request_appointment_change
+]
 
 
 class State(MessagesState):
@@ -20,58 +25,79 @@ class State(MessagesState):
 
 class LLMGraph:
     def __init__(self):
-        self.model = ChatAnthropic(model="claude-3-haiku-20240307")
-        self.tool_list = [Tools.request_medication_change, Tools.make_appointment, Tools.request_appointment_change]
-        self.graph = self.build_graph()
+        self.patient = Patient.objects.first()
 
-    def build_graph(self) -> CompiledStateGraph:
+        self.model = model_claude_3_haiku
+        self.model = self.model.bind_tools(tool_list)
+        memory = MemorySaver()
+        self.graph = self.build_graph().compile(checkpointer=memory)
+
+    def ai_agent(self, state: State):
+        sys_msg = SystemMessage(content=constants.llm_prompt_text + "Currently, you are chatting with a patient with "
+                                                                    "the following information: " + self.patient.__str__())
+        return {"messages": [self.model.invoke([sys_msg] + state["messages"])]}
+
+    def build_summarize_subgraph(self) -> StateGraph:
         builder = StateGraph(State)
-        builder.add_node("assistant", self.assistant)
-        builder.add_node("tools", ToolNode(self.tool_list))
+        builder.add_node("summarize_conversation", self.summarize_conversation)
+        builder.add_conditional_edges(START, self.if_need_summarization)
+        builder.add_edge("summarize_conversation", END)
+        return builder
 
-        builder.add_edge(START, "assistant")
-        builder.add_conditional_edges("assistant", tools_condition)
-        builder.add_edge("tools", "assistant")
+    def build_tool_call_subgraph(self) -> StateGraph:
+        builder = StateGraph(State)
+        builder.add_node("ai_agent", self.ai_agent)
+        builder.add_node("tools", ToolNode(tool_list))
 
-        return builder.compile()
+        builder.add_edge(START, "ai_agent")
+        builder.add_conditional_edges("ai_agent", tools_condition)
+        builder.add_edge("tools", "ai_agent")
 
-    def assistant(self, state: State):
-        # Prompt message
-        sys_msg = SystemMessage(content=prompt.prompt_text)
-        model_with_tools = self.model.bind_tools(self.tool_list)
-        return {"messages": [model_with_tools.invoke([sys_msg] + state["messages"])]}
+        return builder
 
-    def inference(self, user_message, history) -> str:
-        messages = []
-        for msg in history:
-            if msg['role'] == 'user':
-                messages.append(HumanMessage(content=msg['content']))
-            elif msg['role'] == 'assistant':
-                messages.append(AIMessage(content=msg['content']))
+    def build_graph(self) -> StateGraph:
+        builder = StateGraph(State)
+        builder.add_node("summarization_subgraph", self.build_summarize_subgraph().compile())
+        builder.add_node("tool_call_subgraph", self.build_tool_call_subgraph().compile())
 
+        builder.add_edge(START, "tool_call_subgraph")
+        builder.add_edge("tool_call_subgraph", "summarization_subgraph")
+        builder.add_edge("summarization_subgraph", END)
+
+        return builder
+
+    def chat_inference(self, user_message: str, history: List[dict], thread_id: str):
+
+        config = {"configurable": {"thread_id": thread_id}}
+        messages = self.convert_history_to_messages(history)
         messages.append(HumanMessage(content=user_message))
 
-        result = self.graph.invoke({"messages": messages})
-        logger.debug(result)
+        result = self.graph.invoke({"messages": messages}, config)
 
         assistant_response = result['messages'][-1].content
+        summary = self.graph.get_state(config).values.get("summary", None)
+        tools_called = [msg.content for msg in result["messages"] if isinstance(msg, ToolMessage)]
 
-        # Create user message entry
-        ChatHistory.objects.create(
-            patient_id=1,
-            chat_id=1,
-            is_user=True,
-            text=user_message,
-            timestamp=timezone.now()
-        )
+        return assistant_response, summary, tools_called
 
-        # Create assistant message entry
-        ChatHistory.objects.create(
-            patient_id=1,
-            chat_id=1,
-            is_user=False,
-            text=assistant_response,
-            timestamp=timezone.now()
-        )
+    def summarize_conversation(self, state: State):
+        messages = state["messages"] + [HumanMessage(content=summary_prompt)]
+        response = self.model.invoke(messages)
 
-        return assistant_response
+        delete_messages = [RemoveMessage(id=m.id) for m in state["messages"][:-2]]
+        return {"summary": response.content, "messages": delete_messages}
+
+    @staticmethod
+    def if_need_summarization(state: State) -> Literal["summarize_conversation", "__end__"]:
+        if len(state["messages"]) >= summarize_trigger_count:
+            return "summarize_conversation"
+        else:
+            return "__end__"
+
+    @staticmethod
+    def convert_history_to_messages(history: List[dict]) -> List[HumanMessage | AIMessage]:
+        return [
+            HumanMessage(content=msg['content']) if msg['role'] == 'user'
+            else AIMessage(content=msg['content'])
+            for msg in history
+        ]
