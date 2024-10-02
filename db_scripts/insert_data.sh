@@ -29,13 +29,6 @@ INSERT INTO patient (
     '2024-03-15 14:00:00',
     'Dr. Jane Smith'
 ) RETURNING id;
-
--- Insert sample chat history entries
-INSERT INTO chat_history (patient_id, thread_id, is_user, text, summary)
-VALUES
-    (currval('patient_id_seq'), 'ebc92830-6110-45d8-bea9-fead9e51cd17', FALSE, 'Hello, I''ve been experiencing increased thirst lately. Is this related to my diabetes?', 'Patient reports increased thirst'),
-    (currval('patient_id_seq'), 'ebc92830-6110-45d8-bea9-fead9e51cd17', TRUE, 'Hi John, increased thirst can indeed be a symptom of diabetes. Let''s schedule a check-up to monitor your blood sugar levels. How does next week look for you?', 'System suggests check-up for diabetes symptoms'),
-    (currval('patient_id_seq'), 'nks72743-4565-87s6-idw4-tour3e23we52', FALSE, 'Next week works for me. Should I prepare anything specific for the appointment?', 'Patient agrees to check-up, asks for preparation instructions');
 "
 
 # Execute the SQL commands
@@ -49,10 +42,10 @@ if [ $? -eq 0 ]; then
 
     # Display the inserted data
     echo "Displaying inserted patient data:"
-    psql -d $DB_NAME -c "SELECT * FROM patient;"
+    psql -d $DB_NAME -c "SELECT * FROM patient;" -P pager=off
 
     echo "Displaying inserted chat history data:"
-    psql -d $DB_NAME -c "SELECT * FROM chat_history;"
+    psql -d $DB_NAME -c "SELECT * FROM chat_history;" -P pager=off
 else
     echo "Failed to insert sample data."
 fi
