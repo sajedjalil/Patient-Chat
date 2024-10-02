@@ -1,20 +1,20 @@
+pip
 asgiref
 Django~=5.1.1
-pip
 sqlparse
 python-dotenv
 notebook
-psycopg
-neo4j
+psycopg==3.2.3
+neo4j==5.25.0
 json_repair
 
-langgraph
-langgraph-sdk
-langgraph-checkpoint-sqlite
-langsmith
+langgraph==0.2.33
+langgraph-sdk==0.1.32
+langgraph-checkpoint-sqlite==2.0.0
+langsmith==0.1.130
 
 langchain
-langchain-core
+langchain-core==0.3.8
 langchain-community
 langchain_experimental
 

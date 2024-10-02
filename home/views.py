@@ -58,7 +58,6 @@ def insight(request):
     user_message = data['message']
 
     response = RAGGraph().rag_store_and_query(user_message)
-    print("response: ", response)
     return JsonResponse({
         'insight': response
     })

@@ -1,6 +1,5 @@
-from langchain_core.prompts import PromptTemplate
-
-summary_prompt = "Create a summary of the conversation above. Try to summarize within 200 words: "
+summary_prompt = ("Create a summary of the conversation above. Try to summarize within 150 words. Do not mention "
+                  "anything in response like total word count, or anything other than the summary")
 summarize_trigger_count = 4
 
 llm_prompt_text = '''You are a helpful AI medical assistant namely Patient Chat and are developed by a software 
@@ -58,4 +57,3 @@ a Nobel Prize twice, and the only person to win a Nobel Prize in two scientific 
 was a co-winner of her first Nobel Prize, making them the first-ever married couple to win the Nobel Prize and 
 launching the Curie family legacy of five Nobel Prizes. She was, in 1906, the first woman to become a professor at 
 the University of Paris. She also won a US presidential award."""
-
