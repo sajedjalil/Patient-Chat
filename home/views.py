@@ -9,10 +9,10 @@ import json
 import uuid
 
 from home.constants.constants import summarize_trigger_count
-from home.llm.rag_graph import RAGGraph
+from home.langchains.rag_graph import RAGGraph
 from home.models.chat_history import ChatHistory
 from home.models.patient import Patient
-from home.llm.llm_graph import LLMGraph
+from home.langchains.llm_graph import LLMGraph
 
 
 def index(request):

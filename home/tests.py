@@ -2,10 +2,8 @@ import uuid
 
 from django.test import TestCase
 
-from home.constants.constants import history_two_turns, history_one_turn, knowledge_text
-from home.llm.llm_graph import LLMGraph
-from home.llm.rag_graph import RAGGraph
-from home.services.knowledge_graph import KnowledgeGraph
+from home.constants.constants import history_two_turns, history_one_turn
+from home.langchains.llm_graph import LLMGraph
 
 
 class LLMTestCase(TestCase):

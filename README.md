@@ -1,6 +1,19 @@
 # Patient-Chat
 A chat application that uses Langchain, Langgraph and knowledge graph.
 
+
+## Project Structure
+- 📁  Patient_chat
+- 📁  home
+  - 📁 constants
+  - 📁 langchains
+  - 📁 function_tools
+  - 📁 models
+- 📁 notebooks
+- 📁 static
+- 📁 templates
+
+
 ## Long chat optimizations
 Front end sends all the history to the backend. But we filter and summarize in the backend and store the summary in the database for future use, using a random ```thread_id``` in Langsmith. This ```thread_id``` is unique across all database users.
 
@@ -20,13 +33,18 @@ Front end sends all the history to the backend. But we filter and summarize in t
 - Run tests by ```python manage.py test```
 
 
-## Changing models
-- requirements.txt
-- settings.py
-- constants.py
-- .env
+## Changing AI Models
+Settings and langchain dependencies for OpenAI, Anthropic and Google Gemini is already added. You just need to put your API key in ```.env``` file. For other libraries like Ollama, Cohere etc. you will need to follow the steps below:
+1. (**Required**) Add the model's langchain dependency in ```requirements.txt```e.g., ```langchain_openai```
+2. (**Required**) Add the environment variable for the API Key in ```settings.py``` e.g., ```OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')```
+3. (**Optional**) To keep the model list together add an entry in ```constants.py```.
+4. (**Required**) Add the actual API Key ```.env``` file. e.g., ```OPENAI_API_KEY=your-api-key```
 
-## FUnction calling
+## Function calling
 - Change appointment date
-- Create
+- Medication change request
+
+## Future Improvement Lists
+- Streaming chat
+- Parallel API call to reduce interaction time
 
