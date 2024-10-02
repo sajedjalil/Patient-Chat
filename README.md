@@ -9,7 +9,6 @@ A chat application that uses Langchain, Langgraph and knowledge graph.
   - 📁 langchains
   - 📁 function_tools
   - 📁 models
-  - 📁 services
 - 📁 notebooks
 - 📁 static
 - 📁 templates
@@ -41,7 +40,11 @@ Settings and langchain dependencies for OpenAI, Anthropic and Google Gemini is a
 3. (**Optional**) To keep the model list together add an entry in ```constants.py```.
 4. (**Required**) Add the actual API Key ```.env``` file. e.g., ```OPENAI_API_KEY=your-api-key```
 
-## FUnction calling
+## Function calling
 - Change appointment date
-- Create
+- Medication change request
+
+## Future Improvement Lists
+- Streaming chat
+- Parallel API call to reduce interaction time
 
