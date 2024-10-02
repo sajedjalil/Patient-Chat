@@ -4,3 +4,4 @@ export const userInput = document.getElementById('user-input');
 export const sendButton = document.getElementById('send-button');
 export const conversationSummary = document.getElementById('conversation-summary');
 export const medicalInsights = document.getElementById('medical-insights');
+export const actions = document.getElementById('actions');

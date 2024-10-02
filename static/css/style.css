@@ -213,7 +213,57 @@ body {
 #medical-insights {
     /* Add any specific styles for the Medical Insights section */
 }
+#actions-div {
+    padding: 15px;
+}
 
-#actions {
-    /* Add any specific styles for the Actions section */
+.actions-card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+}
+
+.actions-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    flex: 1 1 calc(50% - 5px); /* Adjust the percentage based on how many cards you want per row */
+    min-width: 150px; /* Ensures cards don't get too narrow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.actions-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.actions-card-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.actions-card-text {
+    font-size: 16px;
+    color: #333;
+    word-break: break-word;
+}
+
+.no-actions {
+    width: 100%;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 20px;
+}
+
+@media (max-width: 600px) {
+    .actions-card {
+        flex: 1 1 100%; /* Full width on small screens */
+    }
 }

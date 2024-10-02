@@ -1,4 +1,4 @@
-import { userInfoElement, userInput, sendButton, conversationSummary, medicalInsights } from './uiElements.js';
+import {userInfoElement, userInput, sendButton, conversationSummary, medicalInsights, actions} from './uiElements.js';
 import { addMessage, updateAIMessage } from './messageHandler.js';
 import { sendMessageToAPI, fetchUserInfo, fetchThreadId } from './apiService.js';
 
@@ -53,7 +53,10 @@ async function sendMessage() {
             const aiTimestamp = responseData.ai_timestamp;
             updateAIMessage(aiMessageElement, aiMessage, aiTimestamp);
             conversationSummary.innerText = responseData.summary;
-            medicalInsights.innerText = responseData.medical_insights;
+            console.log(responseData.tools);
+            updateActionsCards(responseData.tools);
+            console.log(actions);
+            console.log(actions.innerText);
 
             chatHistory.push({ role: 'assistant', content: aiMessage });
 
@@ -70,6 +73,40 @@ userInput.addEventListener('keypress', (e) => {
         sendMessage();
     }
 });
+
+function updateActionsCards(tools) {
+    // Clear existing content
+    actions.innerHTML = '';
+
+    if (tools && tools.length > 0) {
+        const cardContainer = document.createElement('div');
+        cardContainer.className = 'actions-card-container';
+
+        tools.forEach(tool => {
+            const card = document.createElement('div');
+            card.className = 'actions-card';
+
+            const icon = document.createElement('div');
+            icon.className = 'actions-card-icon';
+            icon.innerHTML = '&#128295;'; // Tool emoji, you can change this
+
+            const text = document.createElement('div');
+            text.className = 'actions-card-text';
+            text.textContent = tool;
+
+            card.appendChild(icon);
+            card.appendChild(text);
+            cardContainer.appendChild(card);
+        });
+
+        actions.appendChild(cardContainer);
+    } else {
+        const noActionsCard = document.createElement('div');
+        noActionsCard.className = 'actions-card no-actions';
+        noActionsCard.textContent = 'No actions available.';
+        actions.appendChild(noActionsCard);
+    }
+}
 
 // Load user info when the page loads
 loadUserInfo();

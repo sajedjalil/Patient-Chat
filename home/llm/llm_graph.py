@@ -1,7 +1,7 @@
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, MessagesState, END
 from langgraph.prebuilt import tools_condition, ToolNode
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, RemoveMessage, ToolMessage
 from typing import Literal, List
 
 from home.constants import constants
@@ -12,7 +12,6 @@ from home.models.patient import Patient
 
 tool_list = [
     Tools.request_medication_change,
-    Tools.make_appointment,
     Tools.request_appointment_change
 ]
 
@@ -67,10 +66,12 @@ class LLMGraph:
         messages.append(HumanMessage(content=user_message))
 
         result = self.graph.invoke({"messages": messages}, config)
-        assistant_response = result['messages'][-1].content
 
+        assistant_response = result['messages'][-1].content
         summary = self.graph.get_state(config).values.get("summary", None)
-        return assistant_response, summary
+        tools_called = [msg.content for msg in result["messages"] if isinstance(msg, ToolMessage)]
+
+        return assistant_response, summary, tools_called
 
     def summarize_conversation(self, state: State):
         messages = state["messages"] + [HumanMessage(content=summary_prompt)]

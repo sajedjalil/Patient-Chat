@@ -26,4 +26,7 @@ Front end sends all the history to the backend. But we filter and summarize in t
 - constants.py
 - .env
 
+## FUnction calling
+- Change appointment date
+- Create
 
