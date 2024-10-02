@@ -1,57 +1,61 @@
-// apiService.js
 import { getCookie } from './utils.js';
 
-export async function sendMessageToAPI(message, chatHistory, userTimestamp, threadId) {
-    // Use array destructuring with the rest element at the end
-    const [lastElement, ...historyWithoutLast] = [...chatHistory].reverse();
+const BASE_URL = '';  // Add your base URL here if needed
 
-    const data = {
-        userType: 'patient',
-        message: message,
-        history: historyWithoutLast.reverse(),  // Reverse back to original order
-        timestamp: userTimestamp,
-        threadId: threadId
-    };
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+};
 
-    const response = await fetch('/chat/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(data)
-    });
+const fetchWithErrorHandling = async (url, options = {}) => {
+  try {
+    const response = await fetch(BASE_URL + url, options);
+    return await handleResponse(response);
+  } catch (error) {
+    console.error(`Error fetching ${url}:`, error);
+    throw error;
+  }
+};
 
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
+export const sendMessageToAPI = async (message, chatHistory, userTimestamp, threadId) => {
+  const [lastElement, ...historyWithoutLast] = [...chatHistory].reverse();
+  
+  const data = {
+    userType: 'patient',
+    message,
+    history: historyWithoutLast.reverse(),
+    timestamp: userTimestamp,
+    threadId
+  };
 
-    return await response.json();
-}
-
-export async function fetchUserInfo() {
-    try {
-        const response = await fetch('/user-info/');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching user info:', error);
-        throw error;
-    }
-}
+  return fetchWithErrorHandling('/chat/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(data)
+  });
+};
 
 
-export async function fetchThreadId() {
-    try {
-        const response = await fetch('/thread-id/');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching user info:', error);
-        throw error;
-    }
-}
+export const sendInsightAPI = async (message) => {
+  const data = {
+    message: message
+  };
+
+  return fetchWithErrorHandling('/insight/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(data)
+  });
+};
+
+export const fetchUserInfo = () => fetchWithErrorHandling('/user-info/');
+
+export const fetchThreadId = () => fetchWithErrorHandling('/thread-id/');

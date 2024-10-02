@@ -1,3 +1,6 @@
+from langchain_community.graphs import Neo4jGraph
+from langchain_core.documents import Document
+from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, MessagesState, END
 from langgraph.prebuilt import tools_condition, ToolNode
@@ -5,7 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, Remo
 from typing import Literal, List
 
 from home.constants import constants
-from home.constants.chat_models import model_claude_3_haiku
+from home.constants.chat_models import model_claude_3_haiku, model_claude_3_5_sonnet
 from home.constants.constants import summary_prompt, summarize_trigger_count
 from home.llm.function_tools.tools import Tools
 from home.models.patient import Patient
@@ -22,13 +25,16 @@ class State(MessagesState):
 
 class LLMGraph:
     def __init__(self):
+        self.patient = Patient.objects.first()
+
         self.model = model_claude_3_haiku
         self.model = self.model.bind_tools(tool_list)
         memory = MemorySaver()
         self.graph = self.build_graph().compile(checkpointer=memory)
 
     def ai_agent(self, state: State):
-        sys_msg = SystemMessage(content=constants.llm_prompt_text)
+        sys_msg = SystemMessage(content=constants.llm_prompt_text + "Currently, you are chatting with a patient with "
+                                                                    "the following information: " + self.patient.__str__())
         return {"messages": [self.model.invoke([sys_msg] + state["messages"])]}
 
     def build_summarize_subgraph(self) -> StateGraph:
@@ -61,6 +67,7 @@ class LLMGraph:
         return builder
 
     def chat_inference(self, user_message: str, history: List[dict], thread_id: str):
+
         config = {"configurable": {"thread_id": thread_id}}
         messages = self.convert_history_to_messages(history)
         messages.append(HumanMessage(content=user_message))

@@ -35,31 +35,3 @@ class LLMTestCase(TestCase):
         ai_response, summary = self.llm_graph.chat_inference(user_message, history, "test_" + str(uuid.uuid4()))
         self.assertGreater(len(summary), 0)
 
-
-class KnowledgeGraphTestCase(TestCase):
-    def setUp(self):
-        self.graph = KnowledgeGraph()
-
-    def test_add_knowledge_and_query(self):
-        knowledge_text_data = knowledge_text
-        self.graph.add_knowledge_to_graph(knowledge_text_data)
-
-        user_message = "What awards Marie Curie had?"
-        response = self.graph.query_graph(user_message)
-        self.assertTrue( response.lower().__contains__( str("nobel").lower() ))
-        self.assertTrue(response.lower().__contains__(str("presidential").lower()))
-
-
-
-# class RAGTestCase(TestCase):
-#     def setUp(self):
-#         self.graph = RAGGraph()
-#
-#     def test_rag_inference(self):
-#         knowledge_text_data = knowledge_text
-#         self.graph.add_knowledge_to_graph(knowledge_text_data)
-#
-#         user_message = "What awards Marie Curie had?"
-#         response = self.graph.query_graph(user_message)
-#         self.assertTrue( response.lower().__contains__( str("nobel").lower() ))
-#         self.assertTrue(response.lower().__contains__(str("presidential").lower()))

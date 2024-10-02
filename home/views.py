@@ -23,40 +23,44 @@ def index(request):
 @require_http_methods(["POST"])
 def inference(request):
     data = json.loads(request.body)
-    message = data['message']
-    history = data.get('history', [])
-    user_timestamp = data.get('timestamp')
-    thread_id = data.get('threadId')
+    message, history, user_timestamp, thread_id = (
+        data['message'],
+        data.get('history', []),
+        data.get('timestamp'),
+        data.get('threadId')
+    )
 
     llm_graph = LLMGraph()
 
     if len(history) >= summarize_trigger_count:
         summary = get_latest_summary(patient_id=1, is_user=False, thread_id=thread_id)
-
         history = [
-            {
-                "role": "user",
-                "content": "Provide me with the conversation summary"
-            },
-            {
-                "role": "assistant",
-                "content": summary
-            }
+            {"role": "user", "content": "Provide me with the conversation summary"},
+            {"role": "assistant", "content": summary}
         ]
 
     response, summary, tools_called = llm_graph.chat_inference(message, history, thread_id)
-
     user_entry, ai_entry = save_chat_entries_db(message, response, summary, user_timestamp, thread_id)
 
-    summary = summary if summary else "No summary available yet. Chat more to get one."
-
-    # medical_insights = RAGGraph().rag_inference(summary, thread_id)
     return JsonResponse({
         'response': response,
         'user_timestamp': user_entry.timestamp.timestamp() * 1000,
         'ai_timestamp': ai_entry.timestamp.timestamp() * 1000,
-        'summary': summary,
+        'summary': summary or "No summary available yet. Chat more to get one.",
         'tools': tools_called
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def insight(request):
+    data = json.loads(request.body)
+    user_message = data['message']
+
+    response = RAGGraph().rag_store_and_query(user_message)
+    print("response: ", response)
+    return JsonResponse({
+        'insight': response
     })
 
 
@@ -83,11 +87,8 @@ def save_chat_entries_db(user_message, ai_response, summary, user_timestamp, thr
 
 def get_latest_summary(patient_id, is_user, thread_id):
     latest_chat = ChatHistory.objects.filter(
-        Q(patient_id=patient_id) &
-        Q(is_user=is_user) &
-        Q(thread_id=thread_id)
+        Q(patient_id=patient_id) & Q(is_user=is_user) & Q(thread_id=thread_id)
     ).order_by('-timestamp').first()
-
     return latest_chat.summary if latest_chat else None
 
 
@@ -106,30 +107,14 @@ def get_user_info(request):
         return JsonResponse({'error': 'No patient found'}, status=404)
 
     return JsonResponse({
-        'first_name': patient.first_name,
-        'last_name': patient.last_name,
-        'date_of_birth': patient.date_of_birth,
-        'phone_number': patient.phone_number,
-        'email': patient.email,
-        'medical_conditions': patient.medical_conditions,
-        'medication_regimen': patient.medication_regimen,
-        'last_appointment': patient.last_appointment,
-        'next_appointment': patient.next_appointment,
-        'doctor_name': patient.doctor_name,
+        field: getattr(patient, field) for field in
+        ['first_name', 'last_name', 'date_of_birth', 'phone_number', 'email',
+         'medical_conditions', 'medication_regimen', 'last_appointment',
+         'next_appointment', 'doctor_name']
     }, encoder=DateTimeEncoder)
 
 
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_unique_thread_id(request):
-    return JsonResponse({
-        'thread_id': uuid.uuid4()
-    })
-
-
-@csrf_exempt
-@require_http_methods(["GET"])
-def get_rag(request):
-    return JsonResponse({
-        "data": RAGGraph().rag_inference("", uuid.uuid4())
-    })
+    return JsonResponse({'thread_id': uuid.uuid4()})

@@ -13,10 +13,10 @@ medication regimen, diet, etc.
 modify appointments and medication changes. You should filter out and ignore any unrelated, overly sensitive, 
 or controversial topics.'''
 
-rag_prompt_text = '''You are a helpful AI medical assistant specialized in making medical insights. You also take 
-account patient name, date of birth, medical conditions and medications that are taken by a patient. You will build 
-your responses based on these information and other provided medical knowledge. Now use your medical expertise to 
-provide a comprehensive medical insight for the texts below:'''
+rag_prompt_text = '''You are a helpful AI medical assistant specialized in summarizing personal medical data, 
+health issues and their connection to various given symptoms. You also take account patient name, age, 
+medical conditions and medications. You will build your responses based on these information and other provided 
+medical knowledge.'''
 
 history_one_turn = history = [
     {
