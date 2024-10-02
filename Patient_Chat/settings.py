@@ -9,6 +9,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # Load environment variables and API keys.
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
 LANGCHAIN_API_KEY = os.environ.get('LANGCHAIN_API_KEY')
 LANGCHAIN_ENDPOINT = os.environ.get('LANGCHAIN_ENDPOINT')
