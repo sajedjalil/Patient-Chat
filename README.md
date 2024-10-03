@@ -34,13 +34,13 @@ Follow these instructions to set up the project locally:
 
 ### 🐍 Python Version
 
-Tested on `Python 3.12.6`. We don't guarantee compatibility with earlier versions.
+Tested on `Python 3.12.6` and above. We can't guarantee compatibility with earlier versions.
 
 ### 🌐 Virtual Environment
 
-1. Create a virtual environment:
+1. Create a virtual environment named ```venv```:
    ```
-   python -m venv .
+   python -m venv venv
    ```
 2. Activate it:
    ```
@@ -91,6 +91,8 @@ Setup steps:
 4. Run scripts:
    ```
    ./create_db_tables.sh
+   ```
+   ```
    ./insert_data.sh
    ```
 5. Configure database connection in `settings.py`:
@@ -119,6 +121,7 @@ Setup steps:
 3. **Note**: We start with an empty knowledge graph and load data gradually with each user chat.
 
 ### 🚀 Run Django Server
+If you are still in ```db_scripts``` folder, switch back to root project directory.
 
 Start the server:
 ```
@@ -135,9 +138,19 @@ Run tests:
 python manage.py test
 ```
 
+# Project Architecture
+Below we provide overall project architectural details.
+
+## Chain for Chat and Summary
+![llm_graph.png](home%2Fnotebooks%2Fllm_graph.png)
+
+## Chain for Knowledge Graph
+![rag.png](rag.png)
+
 ## 💬 Long Chat Optimizations
 To reduce the cost and time from long chat input-output context, we are using the summarization technique.
 We filter and summarize chat history in the backend, storing summaries in the database using a unique `thread_id` in Langsmith.
+
 
 ## 🔄 Changing AI Models
 
