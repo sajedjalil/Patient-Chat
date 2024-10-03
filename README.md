@@ -1,50 +1,160 @@
-# Patient-Chat
-A chat application that uses Langchain, Langgraph and knowledge graph.
+# 🏥 Patient-Chat
 
+A chat application that leverages Langchain, Langgraph, Langsmith and Neo4j knowledge graph.
 
-## Project Structure
-- 📁  Patient_chat
-- 📁  home
-  - 📁 constants
-  - 📁 langchains
-  - 📁 function_tools
-  - 📁 models
-- 📁 notebooks
-- 📁 static
-- 📁 templates
+![chat.png](chat.png)
 
+## 🌟 Product Features
 
-## Long chat optimizations
-Front end sends all the history to the backend. But we filter and summarize in the backend and store the summary in the database for future use, using a random ```thread_id``` in Langsmith. This ```thread_id``` is unique across all database users.
+- 🤖 Doctor assistant AI chat for patients
+- 📝 Chat summarization to reduce long context window cost and time
+- 🕸️ Knowledge Graph utilization for RAG techniques using Neo4j
+- 🔧 Function calling for external systems and APIs (appointment scheduling, medication changes)
+- 📊 Comprehensive chat summarization for patients
+- 🩺 Medical history insights based on patient preferences, diet, and diagnostics
+- 🔄 LLM agnostic design
 
-## database
-- Install postgresql from https://www.postgresql.org/download/
-- Create the necessary database running the .sh files from db_scripts folder
-- To run the files use ```chmod +x create_db_tables.sh insert_data.sh```
-- Then run ```./create_db_tables.sh```
-- Lastly, run ```./insert_data.sh```
-- Configure the database connection parameters in settings.py
+## 📁 Project File Structure
 
-## Knowledge Graph
-- Install Neo4j https://neo4j.com/download/ or use the server version
-- Specify the environment variables for connection in the .env file
+```
+📁 Patient_chat
+📁 home
+  📁 constants
+  📁 langchains
+  📁 function_tools
+  📁 models
+📁 notebooks
+📁 static
+📁 templates
+```
 
-## Testing
-- Run tests by ```python manage.py test```
+## 🚀 Setup
 
+Follow these instructions to set up the project locally:
 
-## Changing AI Models
-Settings and langchain dependencies for OpenAI, Anthropic and Google Gemini is already added. You just need to put your API key in ```.env``` file. For other libraries like Ollama, Cohere etc. you will need to follow the steps below:
-1. (**Required**) Add the model's langchain dependency in ```requirements.txt```e.g., ```langchain_openai```
-2. (**Required**) Add the environment variable for the API Key in ```settings.py``` e.g., ```OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')```
-3. (**Optional**) To keep the model list together add an entry in ```constants.py```.
-4. (**Required**) Add the actual API Key ```.env``` file. e.g., ```OPENAI_API_KEY=your-api-key```
+### 🐍 Python Version
 
-## Function calling
+Tested on `Python 3.12.6`. We don't guarantee compatibility with earlier versions.
+
+### 🌐 Virtual Environment
+
+1. Create a virtual environment:
+   ```
+   python -m venv .
+   ```
+2. Activate it:
+   ```
+   source venv/bin/activate
+   ```
+
+### 📦 Install Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+### 🔑 Environment Variables
+
+Create a `.env` file at the project root. See `env.example` for reference. Required variables:
+
+```
+ANTHROPIC_API_KEY=your-api-key
+GOOGLE_API_KEY=your-api-key
+OPENAI_API_KEY=your-api-key
+
+LANGCHAIN_API_KEY=your-api-key
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=your-langchain-endpoint
+LANGCHAIN_PROJECT=your-langchain-project-name
+
+NEO4J_URI=your-neo4j-url
+NEO4J_USERNAME=your-neo4j-user-name
+NEO4J_PASSWORD=your-neo4j-user-password
+```
+
+### 🗄️ Database Setup - PostgreSQL
+
+We use PostgreSQL for storing patient information and chat history. Two main tables:
+1. `patient`: Patient bio and medical information
+2. `chat_history`: Chat history, thread_id, and summarized chat history
+
+Setup steps:
+1. Install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/)
+2. Navigate to the `db_scripts` folder:
+   ```
+   cd db_scripts
+   ```
+3. Make scripts executable:
+   ```
+   chmod +x create_db_tables.sh insert_data.sh
+   ```
+4. Run scripts:
+   ```
+   ./create_db_tables.sh
+   ./insert_data.sh
+   ```
+5. Configure database connection in `settings.py`:
+   ```python
+   DATABASES = {
+     'default': {
+         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+         'NAME': 'patient_db',
+         'USER': '',
+         'PASSWORD': '',
+         'HOST': '127.0.0.1',
+         'PORT': '5432'
+     }
+   }
+   ```
+
+### 🕸️ Knowledge Graph
+
+1. Install [Neo4j](https://neo4j.com/download/) or use the server version
+2. Set environment variables in `.env`:
+   ```
+   NEO4J_URI=your-neo4j-url
+   NEO4J_USERNAME=your-neo4j-user-name
+   NEO4J_PASSWORD=your-neo4j-user-password
+   ```
+3. **Note**: We start with an empty knowledge graph and load data gradually with each user chat.
+
+### 🚀 Run Django Server
+
+Start the server:
+```
+python manage.py runserver
+```
+The server should start running at ``` http://127.0.0.1:8000/```
+
+![start.png](start.png)
+
+## 🧪 Testing
+
+Run tests:
+```
+python manage.py test
+```
+
+## 💬 Long Chat Optimizations
+To reduce the cost and time from long chat input-output context, we are using the summarization technique.
+We filter and summarize chat history in the backend, storing summaries in the database using a unique `thread_id` in Langsmith.
+
+## 🔄 Changing AI Models
+
+Support for OpenAI, Anthropic, and Google Gemini is included. For other langchain AI libraries:
+
+1. Add the model's langchain dependency in `requirements.txt`
+2. Add the API Key environment variable in `settings.py`
+3. (Optional) Add an entry in `constants.py`
+4. Add the actual API Key to the `.env` file
+
+## 🛠️ Function Calling
+
 - Change appointment date
 - Medication change request
 
-## Future Improvement Lists
-- Streaming chat
-- Parallel API call to reduce interaction time
+## 🚀 Future Improvements
 
+- 🌊 Streaming chat
+- ⚡ Parallel API calls to reduce interaction time
+- 📜 Display previous chat threads in the UI (already in the database)
