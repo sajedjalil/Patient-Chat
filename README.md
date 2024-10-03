@@ -4,7 +4,7 @@ A chat application that leverages Langchain, Langgraph, Langsmith and Neo4j know
 
 ![chat.png](chat.png)
 
-The patient (Nicola Tesla) mentions that he is taking lisinopril twice a day. But current patient profile states he is taking them once and that's a mismatch. Our intelligent agent detects it and sends a medication change request to the doctor (Shown in bottom left).
+The patient (Nikola Tesla) mentions that he is taking lisinopril twice a day. But current patient profile states he is taking them once and that's a mismatch. Our intelligent agent detects it and sends a medication change request to the doctor (Shown in bottom left).
 
 Besides, conversation summary and medical insights of the patient is shown on the right.
 
